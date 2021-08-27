@@ -12,9 +12,13 @@ import java.util.Date;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.DocumentException;
@@ -25,15 +29,16 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.reemoon.watermark.common.Const;
 import com.reemoon.watermark.service.WatermarkService;
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 @Service
 public class ImgWatermarkServiceImpl implements WatermarkService {
 
+	@Autowired
+	ApplicationContext appContext;
+	
 	@Override
 	public Pair<String, String> watermarkAdd(File inputFile, String inputFileName, String uploadPath,
-			String realUploadPath, String logoPathParent) throws IOException {
+			String realUploadPath) throws IOException {
 
 		String fileNamePrefix = StringUtils.substringBeforeLast(inputFileName, ".");
 		String fileNameStufix = StringUtils.substringAfterLast(inputFileName, ".");
@@ -51,10 +56,8 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		g.drawImage(inputFileImage, 0, 0, inputFileImageWidth, inputFileImageHeight, null); // 使用绘图工具将原图绘制到缓存图片对象
 
 		
-		String logoPath = logoPathParent + File.separator + Const.LOGO_FILE_NAME;
-		File logoFile = new File(logoPath); // 读取水印图片
-		Image logoImage = ImageIO.read(logoFile);
-
+		Resource logoResource = appContext.getResource("classpath:" + Const.LOGO_PATH + Const.LOGO_FILE_NAME);
+		Image logoImage = ImageIO.read(logoResource.getInputStream());
 		int logoImageWidth = logoImage.getWidth(null);
 		int logoImageHeight = logoImage.getHeight(null);
 
@@ -93,8 +96,7 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 
 		g.dispose();
 		try (OutputStream os = new FileOutputStream(realUploadPath + "/" + outputFileName);) {
-			JPEGImageEncoder en = JPEGCodec.createJPEGEncoder(os);
-			en.encode(bufferedImage);
+			ImageIO.write(bufferedImage, "jpg", new File(realUploadPath + "/" + outputFileName));
 		}
 
 		return Pair.of(uploadPath + File.separator + outputFileName, outputFileName);
@@ -102,7 +104,7 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 
 	@Override
 	public Pair<String, String> watermarkAddPDF(File inputFile, String inputFileName, String uploadPath,
-			String realUploadPath, String logoPathParent) throws IOException, DocumentException {
+			String realUploadPath) throws IOException, DocumentException {
 		String fileNamePrefix = StringUtils.substringBeforeLast(inputFileName, ".");
 		String fileNameStufix = StringUtils.substringAfterLast(inputFileName, ".");
 		String outputFileName = fileNamePrefix + "_" + DateFormatUtils.format(new Date(), "yyyyMMddHHmmss") + "."
@@ -115,9 +117,8 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		gs.setFillOpacity(Const.ALPHA);
 		gs.setStrokeOpacity(Const.ALPHA);
 
-		com.itextpdf.text.Image logoImage = com.itextpdf.text.Image
-				.getInstance(logoPathParent + File.separator + Const.LOGO_FILE_NAME);
-
+		Resource logoResource = appContext.getResource("classpath:" + Const.LOGO_PATH + Const.LOGO_FILE_NAME);
+		com.itextpdf.text.Image logoImage = com.itextpdf.text.Image.getInstance(IOUtils.toByteArray(logoResource.getInputStream()));
 		for (int i = 1; i < pdfReader.getNumberOfPages() + 1; i++) {
 			Rectangle rectangle = pdfReader.getPageSize(i);
 			PdfContentByte overContent = pdfStamper.getOverContent(i);

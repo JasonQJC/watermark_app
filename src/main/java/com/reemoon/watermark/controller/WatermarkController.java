@@ -1,6 +1,7 @@
 package com.reemoon.watermark.controller;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.text.DocumentException;
+import com.reemoon.watermark.common.Const;
 import com.reemoon.watermark.model.dto.ImageInfo;
 import com.reemoon.watermark.service.ImageUploadService;
 import com.reemoon.watermark.service.WatermarkService;
@@ -29,27 +31,25 @@ public class WatermarkController {
 	private WatermarkService watermarkService;
 
 	@RequestMapping(value = "/a", method = RequestMethod.POST)
-	public ImageInfo watermarkTest(@RequestParam("file") MultipartFile multipartFile) {
+	public ImageInfo watermarkTest(@RequestParam("file") MultipartFile multipartFile) throws FileNotFoundException {
 		String randomAlphabetic = RandomStringUtils.randomAlphabetic(1, 6);
-		String path = getClass().getClassLoader().getResource("static/").getPath();
-		String logoPathParent = path + File.separator + "images";
-		File tempDir = new File(path + File.separator + "temp"  + File.separator + randomAlphabetic);
+		String relativePath = Const.TEM_PATH  + File.separator + randomAlphabetic;
+		File tempDir = new File(relativePath);
 		if(!tempDir.exists()) {
 			tempDir.mkdirs();
 		}
 		String physicalUploadPath = tempDir.getAbsolutePath();
-		String uploadPath = "static/temp/" + randomAlphabetic;
 		if (multipartFile != null) {
 			String originalFilename = multipartFile.getOriginalFilename();
 			ImageInfo imgInfo = new ImageInfo();
-			String imageURL = imageUploadService.uploadImage(multipartFile, uploadPath, physicalUploadPath);
+			//String imageURL = 
+			imageUploadService.uploadImage(multipartFile, relativePath, physicalUploadPath);
 			File imageFile = new File(physicalUploadPath + File.separator + multipartFile.getOriginalFilename());
 			if (StringUtils.endsWithAny(originalFilename, ".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG")) {
 				try {
 					Pair<String, String> result = watermarkService.watermarkAdd(imageFile,
-							multipartFile.getOriginalFilename(), uploadPath, physicalUploadPath, logoPathParent);
-					imgInfo.setImageUrl(imageURL);
-					imgInfo.setLogoImageUrl(result.getLeft());
+							multipartFile.getOriginalFilename(), relativePath, physicalUploadPath);
+					imgInfo.setLogoImageUrl(result.getLeft().replace(Const.TEM_PATH, "static"));
 					imgInfo.setFileName(result.getRight());
 					return imgInfo;
 				} catch (IOException e) {
@@ -59,9 +59,8 @@ public class WatermarkController {
 			} else if (StringUtils.endsWithAny(originalFilename, ".pdf", ".PDF")) {
 				try {
 					Pair<String, String> result = watermarkService.watermarkAddPDF(imageFile,
-							multipartFile.getOriginalFilename(), uploadPath, physicalUploadPath, logoPathParent);
-					imgInfo.setImageUrl(imageURL);
-					imgInfo.setLogoImageUrl(result.getLeft());
+							multipartFile.getOriginalFilename(), relativePath, physicalUploadPath);
+					imgInfo.setLogoImageUrl(result.getLeft().replace(Const.TEM_PATH, "static"));
 					imgInfo.setFileName(result.getRight());
 					return imgInfo;
 				} catch (IOException | DocumentException e) {

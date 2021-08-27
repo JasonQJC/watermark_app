@@ -20,7 +20,7 @@ public interface WatermarkService {
 	 * @return 添加水印后的文件的地址
 	 * @throws IOException 
 	 */
-	Pair<String, String> watermarkAdd(File imageFile, String imageFileName, String uploadPath, String realUploadPath, String logoPathParent) throws IOException;
+	Pair<String, String> watermarkAdd(File imageFile, String imageFileName, String uploadPath, String realUploadPath) throws IOException;
 	
-	Pair<String, String> watermarkAddPDF(File imageFile, String imageFileName, String uploadPath, String realUploadPath, String logoPathParent) throws IOException, DocumentException;
+	Pair<String, String> watermarkAddPDF(File imageFile, String imageFileName, String uploadPath, String realUploadPath) throws IOException, DocumentException;
 }

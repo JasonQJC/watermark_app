@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.reemoon.watermark.common.Const;
+
 @Controller
 public class DownloadController {
 
@@ -23,7 +25,7 @@ public class DownloadController {
 	public ResponseEntity<byte[]> download(HttpServletRequest req,HttpServletResponse resp) throws IOException {
 		String path = req.getRequestURI();
 		if(StringUtils.isNotBlank(path) && path.startsWith("/static/")) {
-			String physicalUploadPath = getClass().getClassLoader().getResource(RegExUtils.replaceFirst(path, "/", "")).getPath();
+			String physicalUploadPath = RegExUtils.replaceFirst(path, "/static", Const.TEM_PATH);
 			File file = new File(physicalUploadPath);
 			HttpHeaders httpHeaders = new HttpHeaders();
 	        httpHeaders.add("Access-Control-Expose-Headers", "Content-Disposition");
