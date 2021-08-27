@@ -2,6 +2,7 @@ package com.reemoon.watermark.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +26,8 @@ public class DownloadController {
 	public ResponseEntity<byte[]> download(HttpServletRequest req,HttpServletResponse resp) throws IOException {
 		String path = req.getRequestURI();
 		if(StringUtils.isNotBlank(path) && path.startsWith("/static/")) {
-			String physicalUploadPath = RegExUtils.replaceFirst(path, "/static", Const.TEM_PATH);
+//			URLDecoder.decode(path,"UTF-8")
+			String physicalUploadPath = RegExUtils.replaceFirst(URLDecoder.decode(path,"UTF-8"), "/static", Const.TEM_PATH);
 			File file = new File(physicalUploadPath);
 			HttpHeaders httpHeaders = new HttpHeaders();
 	        httpHeaders.add("Access-Control-Expose-Headers", "Content-Disposition");
