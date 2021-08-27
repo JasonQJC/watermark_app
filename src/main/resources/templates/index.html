@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+    <title>为图片PDF添加水印</title> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- <script src="/webjars/vue/2.6.14/dist/vue.js"></script> -->
+    <link rel="stylesheet" href="/webjars/bulma/0.9.2/css/bulma.css">
+</head>
+<body>
+    <div class="container">
+    	<div class="panel">
+			<div class="panel-block" style="display:flex;justify-content:center;">
+				<div class="columns">
+					<div class="column">
+						<div class="uploadCon" style="display:flex;justify-content:center;">
+							<button class="button is-info" onclick="showUpload()">点击上传图片或PDF</button>
+							<input onchange="fileSlected(this)" class="is-hidden" type="file" id="uploadInput" accept="image/png,image/jpeg,application/pdf">
+						</div>
+						<div class="downloadCon panel" style="display:flex;justify-content:center;margin-top: 15px;margin-bottom: 15px;padding: 15px;">
+							<ul id="alist">
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+    	</div>
+    </div>
+    <script type="text/javascript">
+    	function showUpload() {
+    		const uploadInput = document.getElementById("uploadInput");
+    		uploadInput.click();
+    	}
+    	function fileSlected(ele) {
+    		const files = ele.files;
+    		if(files && files.length > 0) {
+    			const formData = new FormData();
+    			formData.append('file', files[0]);
+        		const header = {
+     				method:"POST",
+     				body: formData
+        		}
+        		fetch("/convert/a",header).then((res) => {
+	    			res.json().then(data => {
+	    			  const linode = document.createElement("li");
+					  //linode.onclick = deleteThis;
+					  const anode = document.createElement("a");
+					  anode.textContent = data.fileName;
+			          anode.href=data.logoImageUrl;
+					  anode.target = Math.random().toString(36).slice(-6);
+					  linode.append(anode);
+			
+	    			  document.getElementById("alist").append(linode);
+	    			  ele.outerHTML=ele.outerHTML;
+	    			});
+        		});
+    		}
+    	}
+		function deleteThis() {
+			this.remove();
+		}
+    </script>
+</body>
+</html>
