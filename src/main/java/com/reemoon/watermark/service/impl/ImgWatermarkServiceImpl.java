@@ -3,6 +3,7 @@ package com.reemoon.watermark.service.impl;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,8 +53,14 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 
 		BufferedImage bufferedImage = new BufferedImage(inputFileImageWidth, inputFileImageHeight,
 				BufferedImage.TYPE_INT_RGB); // 创建图片缓存对象
-		Graphics2D g = bufferedImage.createGraphics(); // 创建绘绘图工具对象
-		g.drawImage(inputFileImage, 0, 0, inputFileImageWidth, inputFileImageHeight, null); // 使用绘图工具将原图绘制到缓存图片对象
+		Graphics2D graphics2D = bufferedImage.createGraphics(); // 创建绘绘图工具对象
+		graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	    graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+	    graphics2D.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+	    graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+	    graphics2D.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+	    graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		graphics2D.drawImage(inputFileImage, 0, 0, inputFileImageWidth, inputFileImageHeight, null); // 使用绘图工具将原图绘制到缓存图片对象
 
 		
 		Resource logoResource = appContext.getResource("classpath:" + Const.LOGO_PATH + Const.LOGO_FILE_NAME);
@@ -69,14 +76,14 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 
 		if (scale > 0) {
 			logoImage = logoImage.getScaledInstance(inputFileImageWidthD6, (int) (logoImageHeight / scale),
-					Image.SCALE_AREA_AVERAGING);
+					Image.SCALE_SMOOTH);
 		}
 
 		int markWidth = logoImage.getWidth(null); // 水印图片的宽度和高度
 		int markHeight = logoImage.getHeight(null);
 
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, Const.ALPHA)); // 设置水印透明度
-		g.rotate(Math.toRadians(-10), bufferedImage.getWidth() / 2, bufferedImage.getHeight() / 2); // 旋转图片
+		graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, Const.ALPHA)); // 设置水印透明度
+		graphics2D.rotate(Math.toRadians(-10), bufferedImage.getWidth() / 2, bufferedImage.getHeight() / 2); // 旋转图片
 
 		int x = Const.X;
 		int y = Const.Y;
@@ -88,13 +95,13 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		while (x < inputFileImageWidth * count) { // 循环添加水印
 			y = -inputFileImageHeight / 2;
 			while (y < inputFileImageHeight * count) {
-				g.drawImage(logoImage, x, y, null); // 添加水印
+				graphics2D.drawImage(logoImage, x, y, null); // 添加水印
 				y += markHeight + yInterval;
 			}
 			x += markWidth + xInterval;
 		}
 
-		g.dispose();
+		graphics2D.dispose();
 		try (OutputStream os = new FileOutputStream(realUploadPath + "/" + outputFileName);) {
 			ImageIO.write(bufferedImage, "jpg", new File(realUploadPath + "/" + outputFileName));
 		}
