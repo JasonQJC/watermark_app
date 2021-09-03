@@ -23,7 +23,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
 import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfReader;
@@ -68,7 +70,7 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		int logoImageWidth = logoImage.getWidth(null);
 		int logoImageHeight = logoImage.getHeight(null);
 
-		int inputFileImageWidthD6 = inputFileImageWidth / 6;
+		int inputFileImageWidthD6 = inputFileImageWidth / 3;
 		double scale = 1.0;
 		if (logoImageWidth > inputFileImageWidthD6) {
 			scale = logoImageWidth / inputFileImageWidthD6;
@@ -83,7 +85,7 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		int markHeight = logoImage.getHeight(null);
 
 		graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, Const.ALPHA)); // 设置水印透明度
-		graphics2D.rotate(Math.toRadians(-10), bufferedImage.getWidth() / 2, bufferedImage.getHeight() / 2); // 旋转图片
+		graphics2D.rotate(Math.toRadians(-45), bufferedImage.getWidth() / 2, bufferedImage.getHeight() / 2); // 旋转图片
 
 		int x = Const.X;
 		int y = Const.Y;
@@ -119,10 +121,11 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 		PdfReader pdfReader = new PdfReader(realUploadPath + File.separator + inputFileName);
 		File targetFile = new File(realUploadPath + File.separator + outputFileName);
 		PdfStamper pdfStamper = new PdfStamper(pdfReader, new FileOutputStream(targetFile));
+		BaseFont baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
 
 		PdfGState gs = new PdfGState();
 		gs.setFillOpacity(Const.ALPHA);
-		gs.setStrokeOpacity(Const.ALPHA);
+		//gs.setStrokeOpacity(Const.ALPHA);
 
 		Resource logoResource = appContext.getResource("classpath:" + Const.LOGO_PATH + Const.LOGO_FILE_NAME);
 		com.itextpdf.text.Image logoImage = com.itextpdf.text.Image.getInstance(IOUtils.toByteArray(logoResource.getInputStream()));
@@ -130,17 +133,20 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 			Rectangle rectangle = pdfReader.getPageSize(i);
 			PdfContentByte overContent = pdfStamper.getOverContent(i);
 			overContent.setGState(gs);
-			float pageWidthD6 = rectangle.getWidth() / 6;
+			overContent.setFontAndSize(baseFont, 60);
+			overContent.setRGBColorStroke(206,203,203);
+			overContent.setRGBColorFill(206,203,203);
+			float pageWidthD6 = rectangle.getWidth() / 3;
 			double scale = 1.0;
 			if (logoImage.getWidth() > pageWidthD6) {
 				scale = logoImage.getWidth() / pageWidthD6;
 			}
 			float newHeight = (float) (logoImage.getHeight() / scale);
 
-			for (int startx = Const.X; startx < rectangle.getWidth() * 1.5; startx += pageWidthD6) {
-				for (int starty = Const.Y; starty < rectangle.getHeight() * 1.5; starty += newHeight * 5) {
+			for (int startx = Const.X; startx < rectangle.getWidth() * 1.5; startx += (pageWidthD6 + Const.X_INTERVAL)) {
+				for (int starty = Const.Y; starty < rectangle.getHeight() * 1.5; starty += (newHeight + Const.Y_INTERVAL)) {
 					logoImage.setAbsolutePosition(startx, starty);
-
+					overContent.showTextAligned(Element.ALIGN_LEFT, "绿萌专利,仿冒必究", startx + 80, starty + 175, 45);
 					logoImage.scaleAbsolute(pageWidthD6, newHeight);
 					logoImage.setRotationDegrees(45);
 					overContent.addImage(logoImage);
