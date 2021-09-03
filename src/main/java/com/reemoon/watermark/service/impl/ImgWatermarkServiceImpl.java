@@ -1,6 +1,8 @@
 package com.reemoon.watermark.service.impl;
 
 import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
@@ -86,6 +88,8 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 
 		graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, Const.ALPHA)); // 设置水印透明度
 		graphics2D.rotate(Math.toRadians(-45), bufferedImage.getWidth() / 2, bufferedImage.getHeight() / 2); // 旋转图片
+		graphics2D.setColor(Color.GRAY);
+		graphics2D.setFont(new Font(null, Font.BOLD, 70));
 
 		int x = Const.X;
 		int y = Const.Y;
@@ -98,6 +102,7 @@ public class ImgWatermarkServiceImpl implements WatermarkService {
 			y = -inputFileImageHeight / 2;
 			while (y < inputFileImageHeight * count) {
 				graphics2D.drawImage(logoImage, x, y, null); // 添加水印
+				graphics2D.drawString("绿萌专利,仿冒必究", x + 150, y - 30);
 				y += markHeight + yInterval;
 			}
 			x += markWidth + xInterval;
